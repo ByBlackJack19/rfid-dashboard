@@ -52,7 +52,7 @@
 
   // Leer registros de accesos y debug
   db.ref("accesos").on("child_added", function(snapshot) {
-    console.log("Nuevo dato recibido:", snapshot.val());
+  console.log("Dato completo recibido:", snapshot.val());
 
     const data = snapshot.val();
     const uid = data.uid || "Sin UID";
