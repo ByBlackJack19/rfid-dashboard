@@ -50,28 +50,23 @@
 
   const tabla = document.querySelector("#tablaAccesos tbody");
 
-  // Leer registros de accesos y debug
+  // Leer registros directamente
   db.ref("accesos").on("child_added", function(snapshot) {
-db.ref("accesos").on("child_added", function(snapshot) {
-  const data = snapshot.val();
-  console.log("Dato recibido:", data);
+    const data = snapshot.val();
+    console.log("Dato recibido:", data);
 
-  const key = Object.keys(data)[0]; // identificador único generado por push()
-  const acceso = data[key];
+    const uid = data.uid || "Sin UID";
+    const nombre = data.nombre || "Sin nombre";
+    const fechaHora = data.fecha_hora || "Sin fecha";
 
-  const uid = acceso.uid || "Sin UID";
-  const nombre = acceso.nombre || "Sin nombre";
-  const fechaHora = acceso.fecha_hora || "Sin fecha";
-
-  const fila = document.createElement("tr");
-  fila.innerHTML = `
-    <td>${uid}</td>
-    <td>${nombre}</td>
-    <td>${fechaHora}</td>
-  `;
-  tabla.prepend(fila);
-});
-
+    const fila = document.createElement("tr");
+    fila.innerHTML = `
+      <td>${uid}</td>
+      <td>${nombre}</td>
+      <td>${fechaHora}</td>
+    `;
+    tabla.prepend(fila);
+  });
 
   function filtrarTabla() {
     const filtro = document.getElementById("busqueda").value.toUpperCase();
@@ -82,6 +77,7 @@ db.ref("accesos").on("child_added", function(snapshot) {
     });
   }
 </script>
+
 
 </body>
 </html>
