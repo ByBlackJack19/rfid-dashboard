@@ -33,40 +33,35 @@
 
 <script>
   // Configuración de Firebase
-  var firebaseConfig = {
-    apiKey: "AIzaSyAuU-evVYrt6_Mm4mF25ZPhCoOQbM9JMcA",
-    authDomain: "proyectofinal-a3b70.firebaseapp.com",
-    databaseURL: "proyectofinal-a3b70-default-rtdb.firebaseio.com",
-    projectId: "proyectofinal-a3b70",
-    storageBucket: "proyectofinal-a3b70.appspot.com",
-    messagingSenderId: "409833078729",
-    appId: "1:409833078729:web:a3d611112502efcd84f218",
-    measurementId: "G-11ZRBDWF75"
-  };
+var firebaseConfig = {
+  apiKey: "AIzaSyAuU-evVYrt6_Mm4mF25ZPhCoOQbM9JMcA",
+  authDomain: "proyectofinal-a3b70.firebaseapp.com",
+  databaseURL: "https://proyectofinal-a3b70-default-rtdb.firebaseio.com",
+  projectId: "proyectofinal-a3b70",
+  storageBucket: "proyectofinal-a3b70.appspot.com",
+  messagingSenderId: "409833078729",
+  appId: "1:409833078729:web:a3d611112502efcd84f218",
+  measurementId: "G-11ZRBDWF75"
+};
 
-  // Inicializar Firebase
-  firebase.initializeApp(firebaseConfig);
-  var db = firebase.database();
+firebase.initializeApp(firebaseConfig);
+var db = firebase.database();
 
-  const tabla = document.querySelector("#tablaAccesos tbody");
+db.ref("accesos").on("child_added", function(snapshot) {
+  const data = snapshot.val();
+  const uid = data.uid || "Sin UID";
+  const nombre = data.nombre || "Sin nombre";
+  const fechaHora = data.fecha_hora || "Sin fecha";
 
-  // Leer registros de accesos
-  db.ref("4887").on("child_added", function(snapshot) {
-    const data = snapshot.val();
+  const fila = document.createElement("tr");
+  fila.innerHTML = `
+    <td>${uid}</td>
+    <td>${nombre}</td>
+    <td>${fechaHora}</td>
+  `;
+  tabla.prepend(fila);
+});
 
-    // Verificar campos antes de agregarlos
-    const uid = data.uid || "Sin UID";
-    const nombre = data.nombre || "Sin nombre";
-    const fechaHora = data.fecha_hora || "Sin fecha";
-
-    const fila = document.createElement("tr");
-    fila.innerHTML = `
-      <td>${uid}</td>
-      <td>${nombre}</td>
-      <td>${fechaHora}</td>
-    `;
-    tabla.prepend(fila); // Agrega al inicio
-  });
 
   // Filtro en tabla
   function filtrarTabla() {
