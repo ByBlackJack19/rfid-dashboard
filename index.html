@@ -51,22 +51,26 @@
   const tabla = document.querySelector("#tablaAccesos tbody");
 
   // Leer registros directamente
-  db.ref("accesos").on("child_added", function(snapshot) {
-    const data = snapshot.val();
-    console.log("Dato recibido:", data);
+  db.ref("accesos").once("value", function(snapshot) {
+  snapshot.forEach(function(subSnapshot) {
+    subSnapshot.forEach(function(registroSnapshot) {
+      const data = registroSnapshot.val();
 
-    const uid = data.uid || "Sin UID";
-    const nombre = data.nombre || "Sin nombre";
-    const fechaHora = data.fecha_hora || "Sin fecha";
+      const uid = data.uid || "Sin UID";
+      const nombre = data.nombre || "Sin nombre";
+      const fechaHora = data.fecha_hora || "Sin fecha";
 
-    const fila = document.createElement("tr");
-    fila.innerHTML = `
-      <td>${uid}</td>
-      <td>${nombre}</td>
-      <td>${fechaHora}</td>
-    `;
-    tabla.prepend(fila);
+      const fila = document.createElement("tr");
+      fila.innerHTML = `
+        <td>${uid}</td>
+        <td>${nombre}</td>
+        <td>${fechaHora}</td>
+      `;
+      tabla.prepend(fila);
+    });
   });
+});
+
 
   function filtrarTabla() {
     const filtro = document.getElementById("busqueda").value.toUpperCase();
