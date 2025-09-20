@@ -1,6 +1,6 @@
 // ⚡ Configuración de Spotify
 const clientId = "682780c12e3047d2ad0986d34edd6c96"; // reemplaza con el tuyo
-const redirectUri = "http://localhost:5500/index.html"; // el mismo que registraste
+const redirectUri = "https://byblackjack19.github.io/tablero-rfid/index.html"; // el mismo que registraste
 const scopes = "user-read-email"; // puedes ampliar permisos si quieres
 
 // Obtener token desde URL después del login
@@ -56,3 +56,4 @@ function mostrarInfo(pais, playlists) {
       </p>`;
   });
 }
+
