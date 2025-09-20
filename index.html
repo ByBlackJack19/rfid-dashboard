@@ -1,87 +1,20 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Accesos RFID - Dashboard</title>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4; }
-    h2 { color: #333; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
-    th { background-color: #2196f3; color: white; }
-    tr:nth-child(even) { background-color: #f2f2f2; }
-    input { padding: 5px; margin-top: 10px; width: 50%; }
-  </style>
+  <meta charset="UTF-8">
+  <title>Mapa Musical Mundial</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 </head>
 <body>
+  <h1>🌍 Mapa Musical Mundial</h1>
+  <button id="login">Iniciar sesión con Spotify</button>
+  <div id="map"></div>
+  <div id="info"></div>
 
-<h2>Registro de Accesos RFID</h2>
-<input type="text" id="busqueda" placeholder="Buscar por nombre o UID..." onkeyup="filtrarTabla()" />
-
-<table id="tablaAccesos">
-  <thead>
-    <tr>
-      <th>UID</th>
-      <th>Nombre</th>
-      <th>Fecha y Hora</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
-
-<script>
-  // Configuración de Firebase
-  var firebaseConfig = {
-    apiKey: "AIzaSyAuU-evVYrt6_Mm4mF25ZPhCoOQbM9JMcA",
-    authDomain: "proyectofinal-a3b70.firebaseapp.com",
-    databaseURL: "https://proyectofinal-a3b70-default-rtdb.firebaseio.com",
-    projectId: "proyectofinal-a3b70",
-    storageBucket: "proyectofinal-a3b70.appspot.com",
-    messagingSenderId: "409833078729",
-    appId: "1:409833078729:web:a3d611112502efcd84f218",
-    measurementId: "G-11ZRBDWF75"
-  };
-
-  // Inicializar Firebase
-  firebase.initializeApp(firebaseConfig);
-  var db = firebase.database();
-
-  const tabla = document.querySelector("#tablaAccesos tbody");
-
-  // Leer registros directamente
-  db.ref("accesos").once("value", function(snapshot) {
-  snapshot.forEach(function(subSnapshot) {
-    subSnapshot.forEach(function(registroSnapshot) {
-      const data = registroSnapshot.val();
-
-      const uid = data.uid || "Sin UID";
-      const nombre = data.nombre || "Sin nombre";
-      const fechaHora = data.fecha_hora || "Sin fecha";
-
-      const fila = document.createElement("tr");
-      fila.innerHTML = `
-        <td>${uid}</td>
-        <td>${nombre}</td>
-        <td>${fechaHora}</td>
-      `;
-      tabla.prepend(fila);
-    });
-  });
-});
-
-
-  function filtrarTabla() {
-    const filtro = document.getElementById("busqueda").value.toUpperCase();
-    const filas = document.querySelectorAll("#tablaAccesos tbody tr");
-    filas.forEach(fila => {
-      const texto = fila.innerText.toUpperCase();
-      fila.style.display = texto.includes(filtro) ? "" : "none";
-    });
-  }
-</script>
-
-
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

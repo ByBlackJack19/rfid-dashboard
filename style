@@ -1,0 +1,15 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+#map {
+  height: 80vh;
+  width: 100%;
+}
+
+#info {
+  padding: 1rem;
+  background: #f9f9f9;
+}
