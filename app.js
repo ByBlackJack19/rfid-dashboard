@@ -3,7 +3,7 @@
 // ==========================
 const clientId = "682780c12e3047d2ad0986d34edd6c96"; 
 const redirectUri = "https://byblackjack19.github.io/rfid-dashboard/index.html";
-const scopes = "user-read-private user-read-email";
+const scopes = "user-read-private user-read-email user-top-read";
 
 // ==========================
 // FUNCIONES AUXILIARES
@@ -36,8 +36,6 @@ async function generateCodeChallenge(codeVerifier) {
 // ==========================
 // FLUJO DE LOGIN
 // ==========================
-
-// Guardar code_verifier temporalmente
 let codeVerifier = localStorage.getItem("code_verifier");
 
 document.getElementById("login").addEventListener("click", async () => {
@@ -89,6 +87,33 @@ async function getUserProfile(token) {
 }
 
 // ==========================
+// OBTENER TOP ARTISTS
+// ==========================
+async function getTopArtists(token) {
+  const response = await fetch("https://api.spotify.com/v1/me/top/artists?limit=5", {
+    headers: { Authorization: "Bearer " + token }
+  });
+  return await response.json();
+}
+
+// ==========================
+// MAPA CON LEAFLET
+// ==========================
+const map = L.map("map").setView([20, 0], 2); // vista mundial
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  attribution: "&copy; OpenStreetMap contributors"
+}).addTo(map);
+
+// Base de artistas con ubicación aproximada
+const artistasConCiudad = {
+  "Bad Bunny": { lat: 18.4655, lon: -66.1057, ciudad: "San Juan, Puerto Rico" },
+  "Shakira": { lat: 10.9639, lon: -74.7964, ciudad: "Barranquilla, Colombia" },
+  "Coldplay": { lat: 51.5072, lon: -0.1276, ciudad: "Londres, UK" },
+  "Dua Lipa": { lat: 51.5072, lon: -0.1276, ciudad: "Londres, UK" },
+  "Rosalía": { lat: 41.3874, lon: 2.1686, ciudad: "Barcelona, España" }
+};
+
+// ==========================
 // MANEJAR REDIRECCIÓN
 // ==========================
 window.onload = async () => {
@@ -106,6 +131,24 @@ window.onload = async () => {
         <p>Email: ${userData.email}</p>
         <img src="${userData.images?.[0]?.url || ''}" width="100"/>
       `;
+
+      // ====================
+      // MOSTRAR TOP ARTISTS
+      // ====================
+      const topArtists = await getTopArtists(tokenResponse.access_token);
+
+      topArtists.items.forEach(artist => {
+        const info = artistasConCiudad[artist.name];
+        if (info) {
+          const marker = L.marker([info.lat, info.lon]).addTo(map);
+          marker.bindPopup(`
+            <b>${artist.name}</b><br>
+            ${info.ciudad}<br>
+            <img src="${artist.images[0]?.url}" width="100"><br>
+            <a href="${artist.external_urls.spotify}" target="_blank">Ver en Spotify</a>
+          `);
+        }
+      });
     } else {
       document.getElementById("info").innerText = "Error al obtener el token";
     }
