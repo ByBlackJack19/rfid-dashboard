@@ -1,62 +1,113 @@
-// ⚡ Configuración de Spotify
-const clientId = "682780c12e3047d2ad0986d34edd6c96"; // reemplaza con el tuyo
-const redirectUri = "https://byblackjack19.github.io/rfid-dashboard/index.html"; // el mismo que registraste
-const scopes = "user-read-email"; // puedes ampliar permisos si quieres
+// ==========================
+// CONFIGURACIÓN
+// ==========================
+const clientId = "682780c12e3047d2ad0986d34edd6c96"; 
+const redirectUri = "https://byblackjack19.github.io/rfid-dashboard/index.html";
+const scopes = "user-read-private user-read-email";
 
-// Obtener token desde URL despuasdassdés del login
-function getTokenFromUrl() {
-  const hash = window.location.hash.substring(1).split("&")
-    .reduce((acc, item) => {
-      const parts = item.split("=");
-      acc[parts[0]] = decodeURIComponent(parts[1]);
-      return acc;
-    }, {});
-  return hash.access_token;
+// ==========================
+// FUNCIONES AUXILIARES
+// ==========================
+
+// Genera un string aleatorio
+function generateRandomString(length) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
 }
 
-let token = getTokenFromUrl();
+// Codifica en base64url
+function base64encode(string) {
+  return btoa(String.fromCharCode.apply(null, new Uint8Array(string)))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
 
-// Botón de login
-document.getElementById("login").addEventListener("click", () => {
-const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&response_type=token&show_dialog=true`;
+// Genera el Code Challenge (SHA256)
+async function generateCodeChallenge(codeVerifier) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(codeVerifier);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return base64encode(digest);
+}
+
+// ==========================
+// FLUJO DE LOGIN
+// ==========================
+
+// Guardar code_verifier temporalmente
+let codeVerifier = localStorage.getItem("code_verifier");
+
+document.getElementById("login").addEventListener("click", async () => {
+  codeVerifier = generateRandomString(128);
+  localStorage.setItem("code_verifier", codeVerifier);
+
+  const codeChallenge = await generateCodeChallenge(codeVerifier);
+
+  const authUrl = `https://accounts.spotify.com/authorize?` +
+    `client_id=${clientId}` +
+    `&response_type=code` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&scope=${encodeURIComponent(scopes)}` +
+    `&code_challenge_method=S256` +
+    `&code_challenge=${codeChallenge}`;
+
   window.location = authUrl;
 });
 
-// Inicializar mapa con Leaflet
-const map = L.map('map').setView([20, 0], 2); // Vista mundial
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap contributors'
-}).addTo(map);
-
-// Ejemplo: al hacer clic en España (lat, lon aproximados)
-L.marker([40, -3]).addTo(map)
-  .bindPopup("Haz clic para ver playlists de España")
-  .on("click", async () => {
-    if (!token) {
-      alert("Inicia sesión con Spotify primero.");
-      return;
-    }
-    const response = await fetch("https://api.spotify.com/v1/browse/featured-playlists?country=ES", {
-      headers: { Authorization: "Bearer " + token }
-    });
-    const data = await response.json();
-    mostrarInfo("España", data.playlists.items);
+// ==========================
+// INTERCAMBIAR CODE -> TOKEN
+// ==========================
+async function fetchAccessToken(code) {
+  const body = new URLSearchParams({
+    client_id: clientId,
+    grant_type: "authorization_code",
+    code: code,
+    redirect_uri: redirectUri,
+    code_verifier: codeVerifier
   });
 
-// Mostrar resultados
-function mostrarInfo(pais, playlists) {
-  const infoDiv = document.getElementById("info");
-  infoDiv.innerHTML = `<h2>Playlists destacadas en ${pais}</h2>`;
-  playlists.forEach(pl => {
-    infoDiv.innerHTML += `
-      <p>
-        <img src="${pl.images[0].url}" width="50"> 
-        <a href="${pl.external_urls.spotify}" target="_blank">${pl.name}</a>
-      </p>`;
+  const response = await fetch("https://accounts.spotify.com/api/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: body.toString()
   });
+
+  return await response.json();
 }
 
+// ==========================
+// OBTENER DATOS DEL USUARIO
+// ==========================
+async function getUserProfile(token) {
+  const response = await fetch("https://api.spotify.com/v1/me", {
+    headers: { Authorization: "Bearer " + token }
+  });
+  return await response.json();
+}
 
+// ==========================
+// MANEJAR REDIRECCIÓN
+// ==========================
+window.onload = async () => {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get("code");
 
+  if (code) {
+    const tokenResponse = await fetchAccessToken(code);
+    console.log("Token:", tokenResponse);
 
+    if (tokenResponse.access_token) {
+      const userData = await getUserProfile(tokenResponse.access_token);
+      document.getElementById("info").innerHTML = `
+        <h2>Bienvenido, ${userData.display_name}</h2>
+        <p>Email: ${userData.email}</p>
+        <img src="${userData.images?.[0]?.url || ''}" width="100"/>
+      `;
+    } else {
+      document.getElementById("info").innerText = "Error al obtener el token";
+    }
+  }
+};
