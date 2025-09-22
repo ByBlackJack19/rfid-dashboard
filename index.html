@@ -1,72 +1,20 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa de Artistas Spotify</title>
-    <link rel="stylesheet" href="https://developer.spotify.com/documentation/web-api/reference/get-users-top-artists-and-tracks5">
-    
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #121212;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
-        
-        #container {
-            width: 90%;
-            max-width: 1200px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
-
-        h1 {
-            color: #1DB954;
-            text-align: center;
-        }
-
-        #login {
-            background-color: #1DB954;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 500px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            display: none; /* Oculta el botón ya que no se necesita para el nuevo flujo */
-        }
-        
-        #map {
-            height: 600px; /* Tamaño del mapa */
-            width: 100%;
-            border: 2px solid #1DB954;
-            border-radius: 8px;
-        }
-        
-        #info {
-            text-align: center;
-            margin-top: 10px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Mapa Musical Mundial</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 </head>
 <body>
-    <div id="container">
-        <h1>Artistas Más Populares por País en Spotify</h1>
-        <div id="info">Cargando el mapa...</div>
-        <div id="map"></div>
-    </div>
+  <h1>🌍 Mapa Musical Mundial</h1>
+  <button id="login">Iniciar sesión con Spotify</button>
+  <div id="map"></div>
+  <div id="info"></div>
 
-    <script src="https://developer.spotify.com/documentation/web-api/reference/get-users-top-artists-and-tracks6"></script>
-    <script src="app.js"></script> 
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
