@@ -18,7 +18,7 @@ let token = getTokenFromUrl();
 
 // Botón de login
 document.getElementById("login").addEventListener("click", () => {
-  const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scopes}&response_type=token&show_dialog=true`;
+const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&response_type=token&show_dialog=true`;
   window.location = authUrl;
 });
 
@@ -56,5 +56,6 @@ function mostrarInfo(pais, playlists) {
       </p>`;
   });
 }
+
 
 
