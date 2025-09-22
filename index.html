@@ -221,9 +221,8 @@
         window.onload = async () => {
             const params = new URLSearchParams(window.location.search);
             const code = params.get("code");
-            const codeVerifier = localStorage.getItem("code_verifier");
 
-            if (code && codeVerifier) {
+            if (code) {
                 showLoading();
                 try {
                     const tokenResponse = await fetchAccessToken(code);
@@ -268,9 +267,6 @@
                 } finally {
                     hideLoading();
                 }
-            } else {
-                loginSection.classList.remove("hidden");
-                statsSection.classList.add("hidden");
             }
         };
     </script>
