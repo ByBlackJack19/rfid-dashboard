@@ -52,6 +52,9 @@
         <div id="loading-spinner" class="hidden flex justify-center mt-8">
             <div class="animate-spin rounded-full h-12 w-12 border-4 border-t-4 border-gray-200 border-t-spotify-green"></div>
         </div>
+        
+        <!-- Sección de errores añadida -->
+        <div id="error-message" class="hidden text-red-500 text-center mt-4"></div>
     </div>
 
     <script>
@@ -103,6 +106,7 @@
         const tracksTab = document.getElementById("tracks-tab");
         const artistsContent = document.getElementById("artists-content");
         const tracksContent = document.getElementById("tracks-content");
+        const errorMessageDiv = document.getElementById("error-message");
 
         loginBtn.addEventListener("click", async () => {
             codeVerifier = generateRandomString(128);
@@ -172,10 +176,18 @@
             loadingSpinner.classList.remove("hidden");
             statsSection.classList.add("hidden");
             loginSection.classList.add("hidden");
+            errorMessageDiv.classList.add("hidden");
         }
 
         function hideLoading() {
             loadingSpinner.classList.add("hidden");
+        }
+
+        function showError(message) {
+            errorMessageDiv.innerText = message;
+            errorMessageDiv.classList.remove("hidden");
+            loginSection.classList.remove("hidden");
+            statsSection.classList.add("hidden");
         }
 
         function showArtists(artists) {
@@ -227,7 +239,10 @@
                 showLoading();
                 try {
                     const tokenResponse = await fetchAccessToken(code);
-
+                    if (tokenResponse.error) {
+                        throw new Error(tokenResponse.error_description || "Error al obtener el token.");
+                    }
+                    
                     if (tokenResponse.access_token) {
                         const [userData, topArtistsData, topTracksData] = await Promise.all([
                             getUserProfile(tokenResponse.access_token),
@@ -264,7 +279,7 @@
                     }
                 } catch (error) {
                     console.error("Error en la autenticación o carga de datos:", error);
-                    document.getElementById("info-message").innerText = "Error al iniciar sesión. Intenta de nuevo.";
+                    showError("Error al iniciar sesión. Intenta de nuevo.");
                 } finally {
                     hideLoading();
                 }
