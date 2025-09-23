@@ -195,17 +195,16 @@
             if (!response.ok) {
                 if (response.status === 401) {
                     try {
-                        await refreshToken(); // Intentar refrescar el token si es un error de autenticación
-                        return await callApi(endpoint, method, body); // Reintentar la llamada
+                        await refreshToken();
+                        return await callApi(endpoint, method, body);
                     } catch (refreshError) {
-                         // Si el refresco falla, lanzar un error para que el flujo principal lo maneje
                          throw new Error("Token de acceso expirado o no válido.");
                     }
                 }
                 throw new Error(`Error de la API: ${response.status} ${response.statusText}`);
             }
             if (response.status === 204) {
-                return {}; // No content response
+                return {};
             }
             return await response.json();
         }
@@ -343,8 +342,6 @@
 
         function showError(message) {
             showMessage("Error", message, 'alert');
-            loginSection.classList.remove("hidden");
-            statsSection.classList.add("hidden");
         }
         
         // Función para mostrar el contenido de las pestañas
@@ -494,22 +491,34 @@
         window.onload = async () => {
             const params = new URLSearchParams(window.location.search);
             const code = params.get("code");
-            const codeVerifier = localStorage.getItem("code_verifier");
             const storedRefreshToken = localStorage.getItem("refresh_token");
+            let initializationSuccess = false;
 
             try {
-                if (code && codeVerifier) {
+                if (code) {
                     showLoading();
+                    const codeVerifier = localStorage.getItem("code_verifier");
+                    if (!codeVerifier) {
+                        throw new Error("Missing code verifier in local storage.");
+                    }
                     const tokenResponse = await fetchAccessToken(code);
                     if (tokenResponse.error) {
-                        throw new Error(tokenResponse.error_description || "Error al obtener el token.");
+                        throw new Error(tokenResponse.error_description || "Failed to get access token.");
                     }
                     accessToken = tokenResponse.access_token;
                     localStorage.setItem("access_token", accessToken);
                     if (tokenResponse.refresh_token) {
                         localStorage.setItem("refresh_token", tokenResponse.refresh_token);
                     }
-                    
+                    initializationSuccess = true;
+
+                } else if (storedRefreshToken) {
+                    showLoading();
+                    await refreshToken();
+                    initializationSuccess = true;
+                }
+
+                if (initializationSuccess) {
                     const [userData, topArtistsData, topTracksData] = await Promise.all([
                         getUserProfile(),
                         getTopArtists(),
@@ -517,14 +526,12 @@
                     ]);
                     userId = userData.id;
 
-                    // Configurar la UI
                     loginSection.classList.add("hidden");
                     statsSection.classList.remove("hidden");
-                    document.getElementById("user-image").src = userData.images[0]?.url || '';
+                    document.getElementById("user-image").src = userData.images[0]?.url || 'https://placehold.co/100x100/1DB954/white?text=User';
                     document.getElementById("user-image").classList.remove("hidden");
                     document.getElementById("user-greeting").innerText = `Hola, ${userData.display_name}`;
 
-                    // Inicializar listeners de pestañas
                     artistsTab.addEventListener("click", () => showContent('artists-content'));
                     tracksTab.addEventListener("click", () => showContent('tracks-content'));
                     playlistsTab.addEventListener("click", () => {
@@ -532,45 +539,20 @@
                         showPlaylists();
                     });
 
-                    // Mostrar los datos iniciales
                     showArtists(topArtistsData.items);
                     showTracks(topTracksData.items);
-                    showContent('artists-content'); // Mostrar Artistas por defecto
-                    
-                } else if (storedRefreshToken) {
-                     showLoading();
-                    // Si hay un refresh token, intentamos obtener un nuevo access token
-                    try {
-                        await refreshToken();
-                        const userData = await getUserProfile();
-                        userId = userData.id;
-                        loginSection.classList.add("hidden");
-                        statsSection.classList.remove("hidden");
-                        document.getElementById("user-image").src = userData.images[0]?.url || '';
-                        document.getElementById("user-image").classList.remove("hidden");
-                        document.getElementById("user-greeting").innerText = `Hola, ${userData.display_name}`;
-                        artistsTab.addEventListener("click", () => showContent('artists-content'));
-                        tracksTab.addEventListener("click", () => showContent('tracks-content'));
-                        playlistsTab.addEventListener("click", () => {
-                            showContent('playlists-content');
-                            showPlaylists();
-                        });
-                        const topArtistsData = await getTopArtists();
-                        const topTracksData = await getTopTracks();
-                        showArtists(topArtistsData.items);
-                        showTracks(topTracksData.items);
-                        showContent('artists-content');
-                    } catch (error) {
-                        console.error("Error al refrescar el token:", error);
-                        showError("La sesión ha expirado. Por favor, vuelve a iniciar sesión.");
-                    }
+                    showContent('artists-content');
                 } else {
                     loginSection.classList.remove("hidden");
                     statsSection.classList.add("hidden");
                 }
-            } catch(error) {
-                 console.error("Error en la autenticación o carga de datos:", error);
-                 showError("Error inesperado. Intenta de nuevo.");
+
+            } catch (error) {
+                console.error("Critical error during initialization:", error);
+                localStorage.clear();
+                showError("¡Hubo un error crítico! Por favor, vuelve a iniciar sesión para continuar.");
+                loginSection.classList.remove("hidden");
+                statsSection.classList.add("hidden");
             } finally {
                 hideLoading();
             }
