@@ -334,6 +334,7 @@
 
         function hideLoading() {
             loadingSpinner.classList.add("hidden");
+            statsSection.classList.remove("hidden");
         }
 
         function showError(message) {
@@ -381,7 +382,7 @@
                 item.innerHTML = `
                     <span class="font-bold text-xl text-spotify-green">${index + 1}.</span>
                     <img src="${track.album.images[0]?.url || 'https://placehold.co/64x64/1DB954/white?text=Track'}" 
-                         alt="${track.name}" class="w-16 h-16 rounded-lg object-cover">
+                             alt="${track.name}" class="w-16 h-16 rounded-lg object-cover">
                     <div class="flex-1">
                         <p class="text-sm font-semibold truncate">${track.name}</p>
                         <p class="text-xs text-gray-400 truncate">${track.artists.map(a => a.name).join(', ')}</p>
@@ -392,7 +393,7 @@
         }
         
         async function showPlaylists() {
-            showLoading();
+            // Eliminar la llamada a showLoading(), ya que causa la pantalla negra
             userPlaylistsDiv.innerHTML = '<p class="text-center text-gray-400">Cargando playlists...</p>';
             try {
                 const playlists = await getUserPlaylists();
@@ -457,7 +458,7 @@
                 console.error("Error al cargar playlists:", error);
                 showError("Error al cargar playlists. ¿Se ha revocado el permiso?");
             } finally {
-                hideLoading();
+                // hideLoading(); // Ya no es necesario
             }
         }
         
@@ -539,7 +540,7 @@
                     hideLoading();
                 }
             } else if (storedRefreshToken) {
-                 // Si hay un refresh token, intentamos obtener un nuevo access token
+                    // Si hay un refresh token, intentamos obtener un nuevo access token
                 try {
                     await refreshToken();
                     const userData = await getUserProfile();
