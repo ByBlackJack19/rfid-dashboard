@@ -36,6 +36,7 @@
             </button>
         </div>
         
+        <!-- Esta sección se oculta por defecto y se muestra al iniciar sesión -->
         <div id="stats-section" class="hidden">
             <header class="flex items-center justify-between mb-8">
                 <div class="flex items-center">
@@ -74,6 +75,7 @@
             </div>
         </div>
         
+        <!-- Spinner de carga -->
         <div id="loading-spinner" class="hidden flex justify-center mt-8">
             <div class="animate-spin rounded-full h-12 w-12 border-4 border-t-4 border-gray-200 border-t-spotify-green"></div>
         </div>
@@ -496,6 +498,8 @@
 
             try {
                 if (code) {
+                    // Si hay un código en la URL, se inicia el proceso de autenticación.
+                    console.log("Found code in URL. Starting token exchange...");
                     showLoading();
                     const codeVerifier = localStorage.getItem("code_verifier");
                     if (!codeVerifier) {
@@ -513,12 +517,16 @@
                     initializationSuccess = true;
 
                 } else if (storedRefreshToken) {
+                    // Si no hay código pero sí un token de refresco, se intenta renovar la sesión.
+                    console.log("Found refresh token. Attempting to refresh session...");
                     showLoading();
                     await refreshToken();
                     initializationSuccess = true;
                 }
 
+                // Esta es la parte importante: si la inicialización fue exitosa, se muestra la app.
                 if (initializationSuccess) {
+                    console.log("Initialization successful. Getting user profile...");
                     const userData = await getUserProfile();
                     userId = userData.id;
                     
@@ -540,6 +548,8 @@
                     showContent('playlists-content');
                     showPlaylists();
                 } else {
+                    // Si la inicialización no fue exitosa (p. ej., no se encontró token), se muestra el login.
+                    console.log("Initialization failed. Showing login section.");
                     loginSection.classList.remove("hidden");
                     statsSection.classList.add("hidden");
                 }
