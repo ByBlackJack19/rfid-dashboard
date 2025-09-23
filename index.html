@@ -421,11 +421,16 @@
                     // Añadir listeners para los botones de Update y Delete
                     document.querySelectorAll(".update-btn").forEach(btn => {
                         btn.addEventListener("click", async (e) => {
-                            const playlistId = e.target.dataset.playlistId;
-                            const topTracks = await getTopTracks();
-                            const trackUris = topTracks.items.map(track => track.uri);
-                            await addTracksToPlaylist(playlistId, trackUris);
-                            showMessage("Éxito", "¡Playlist actualizada con tus 50 canciones más escuchadas!", 'alert');
+                            try {
+                                const playlistId = e.target.dataset.playlistId;
+                                const topTracks = await getTopTracks();
+                                const trackUris = topTracks.items.map(track => track.uri);
+                                await addTracksToPlaylist(playlistId, trackUris);
+                                showMessage("Éxito", "¡Playlist actualizada con tus 50 canciones más escuchadas!", 'alert');
+                            } catch (error) {
+                                console.error("Error al actualizar la playlist:", error);
+                                showMessage("Error", "No se pudo actualizar la playlist. Por favor, inténtalo de nuevo.", 'alert');
+                            }
                         });
                     });
 
@@ -433,10 +438,15 @@
                         btn.addEventListener("click", async (e) => {
                             const confirmDelete = await showMessage("Confirmar", "¿Estás seguro de que quieres eliminar esta playlist?", 'confirm');
                             if (confirmDelete) {
-                                const playlistId = e.target.dataset.playlistId;
-                                await unfollowPlaylist(playlistId);
-                                showMessage("Éxito", "¡Playlist eliminada con éxito!", 'alert');
-                                showPlaylists(); // Volver a cargar la lista
+                                try {
+                                    const playlistId = e.target.dataset.playlistId;
+                                    await unfollowPlaylist(playlistId);
+                                    showMessage("Éxito", "¡Playlist eliminada con éxito!", 'alert');
+                                    showPlaylists(); // Volver a cargar la lista
+                                } catch (error) {
+                                    console.error("Error al eliminar la playlist:", error);
+                                    showMessage("Error", "No se pudo eliminar la playlist. Por favor, inténtalo de nuevo.", 'alert');
+                                }
                             }
                         });
                     });
