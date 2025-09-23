@@ -519,19 +519,16 @@
                 }
 
                 if (initializationSuccess) {
-                    const [userData, topArtistsData, topTracksData] = await Promise.all([
-                        getUserProfile(),
-                        getTopArtists(),
-                        getTopTracks()
-                    ]);
+                    const userData = await getUserProfile();
                     userId = userData.id;
-
+                    
                     loginSection.classList.add("hidden");
                     statsSection.classList.remove("hidden");
                     document.getElementById("user-image").src = userData.images[0]?.url || 'https://placehold.co/100x100/1DB954/white?text=User';
                     document.getElementById("user-image").classList.remove("hidden");
                     document.getElementById("user-greeting").innerText = `Hola, ${userData.display_name}`;
-
+                    
+                    // Solo inicializar los listeners de las pestañas
                     artistsTab.addEventListener("click", () => showContent('artists-content'));
                     tracksTab.addEventListener("click", () => showContent('tracks-content'));
                     playlistsTab.addEventListener("click", () => {
@@ -539,9 +536,9 @@
                         showPlaylists();
                     });
 
-                    showArtists(topArtistsData.items);
-                    showTracks(topTracksData.items);
-                    showContent('artists-content');
+                    // Cargar solo la lista de reproducción por defecto
+                    showContent('playlists-content');
+                    showPlaylists();
                 } else {
                     loginSection.classList.remove("hidden");
                     statsSection.classList.add("hidden");
