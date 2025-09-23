@@ -194,8 +194,13 @@
             // Manejar errores de la API
             if (!response.ok) {
                 if (response.status === 401) {
-                    await refreshToken(); // Intentar refrescar el token si es un error de autenticación
-                    return await callApi(endpoint, method, body); // Reintentar la llamada
+                    try {
+                        await refreshToken(); // Intentar refrescar el token si es un error de autenticación
+                        return await callApi(endpoint, method, body); // Reintentar la llamada
+                    } catch (refreshError) {
+                         // Si el refresco falla, lanzar un error para que el flujo principal lo maneje
+                         throw new Error("Token de acceso expirado o no válido.");
+                    }
                 }
                 throw new Error(`Error de la API: ${response.status} ${response.statusText}`);
             }
@@ -492,9 +497,9 @@
             const codeVerifier = localStorage.getItem("code_verifier");
             const storedRefreshToken = localStorage.getItem("refresh_token");
 
-            if (code && codeVerifier) {
-                showLoading();
-                try {
+            try {
+                if (code && codeVerifier) {
+                    showLoading();
                     const tokenResponse = await fetchAccessToken(code);
                     if (tokenResponse.error) {
                         throw new Error(tokenResponse.error_description || "Error al obtener el token.");
@@ -532,41 +537,42 @@
                     showTracks(topTracksData.items);
                     showContent('artists-content'); // Mostrar Artistas por defecto
                     
-                } catch (error) {
-                    console.error("Error en la autenticación o carga de datos:", error);
-                    showError("Error al iniciar sesión. Intenta de nuevo.");
-                } finally {
-                    hideLoading();
+                } else if (storedRefreshToken) {
+                     showLoading();
+                    // Si hay un refresh token, intentamos obtener un nuevo access token
+                    try {
+                        await refreshToken();
+                        const userData = await getUserProfile();
+                        userId = userData.id;
+                        loginSection.classList.add("hidden");
+                        statsSection.classList.remove("hidden");
+                        document.getElementById("user-image").src = userData.images[0]?.url || '';
+                        document.getElementById("user-image").classList.remove("hidden");
+                        document.getElementById("user-greeting").innerText = `Hola, ${userData.display_name}`;
+                        artistsTab.addEventListener("click", () => showContent('artists-content'));
+                        tracksTab.addEventListener("click", () => showContent('tracks-content'));
+                        playlistsTab.addEventListener("click", () => {
+                            showContent('playlists-content');
+                            showPlaylists();
+                        });
+                        const topArtistsData = await getTopArtists();
+                        const topTracksData = await getTopTracks();
+                        showArtists(topArtistsData.items);
+                        showTracks(topTracksData.items);
+                        showContent('artists-content');
+                    } catch (error) {
+                        console.error("Error al refrescar el token:", error);
+                        showError("La sesión ha expirado. Por favor, vuelve a iniciar sesión.");
+                    }
+                } else {
+                    loginSection.classList.remove("hidden");
+                    statsSection.classList.add("hidden");
                 }
-            } else if (storedRefreshToken) {
-                 // Si hay un refresh token, intentamos obtener un nuevo access token
-                try {
-                    await refreshToken();
-                    const userData = await getUserProfile();
-                    userId = userData.id;
-                    loginSection.classList.add("hidden");
-                    statsSection.classList.remove("hidden");
-                    document.getElementById("user-image").src = userData.images[0]?.url || '';
-                    document.getElementById("user-image").classList.remove("hidden");
-                    document.getElementById("user-greeting").innerText = `Hola, ${userData.display_name}`;
-                    artistsTab.addEventListener("click", () => showContent('artists-content'));
-                    tracksTab.addEventListener("click", () => showContent('tracks-content'));
-                    playlistsTab.addEventListener("click", () => {
-                        showContent('playlists-content');
-                        showPlaylists();
-                    });
-                    const topArtistsData = await getTopArtists();
-                    const topTracksData = await getTopTracks();
-                    showArtists(topArtistsData.items);
-                    showTracks(topTracksData.items);
-                    showContent('artists-content');
-                } catch (error) {
-                    console.error("Error al refrescar el token:", error);
-                    showError("La sesión ha expirado. Por favor, vuelve a iniciar sesión.");
-                }
-            } else {
-                loginSection.classList.remove("hidden");
-                statsSection.classList.add("hidden");
+            } catch(error) {
+                 console.error("Error en la autenticación o carga de datos:", error);
+                 showError("Error inesperado. Intenta de nuevo.");
+            } finally {
+                hideLoading();
             }
         };
     </script>
